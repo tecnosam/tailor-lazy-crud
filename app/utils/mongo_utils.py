@@ -80,16 +80,34 @@ def add_to_db(key, value, query=None):
     return __push_document(key, value)
 
 
+def get_objects_in_array(collection, field, query):
+    pipeline = [
+        {'$match': {field: {'$exists': True}}},
+        {'$unwind': f"${field}"},
+    ]
+
+    if query:
+        for k, v in query.items():
+
+            pipeline.append({'$match': {f"{field}.{k}": v}})
+
+    results = db[collection].aggregate(pipeline)
+
+    return results
+
+
 def get_documents(collection, query):
 
     if __is_field(collection):
 
         collection, field = collection.split('.')
 
-        results = db[collection].find(
-            {field: query},
-            {'id': 1, field: 1}
+        results = get_objects_in_array(
+            collection,
+            field,
+            query
         )
+
     else:
         results = db[collection].find(query)
 
@@ -100,9 +118,18 @@ def get_document(collection, query):
 
     if __is_field(collection):
 
-        collection, field = collection.split('.')
+        try:
+            collection, field = collection.split('.')
 
-        return db[collection].find_one({field: query})
+            results = get_objects_in_array(
+                collection,
+                field,
+                query
+            )
+
+            return next(results)
+        except StopIteration:
+            return None
 
     result = db[collection].find_one(query)
     return result
