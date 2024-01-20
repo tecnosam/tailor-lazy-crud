@@ -143,7 +143,29 @@ def get_document_by_id(collection, documentUUId):
 
 def update_document(key, query, update):
 
-    return True
+    if __is_field(key):
+
+        collection, field = key.split('.')
+
+        query = {
+            f'{field}.{k}': v
+            for k, v in query.items()
+        }
+
+        update = {
+            f'{field}.$.{k}': v
+            for k, v in update.items()
+        }
+
+        return db[collection].update_many(
+            query,
+            {"$set": update}
+        )
+
+    return db[key].update_one(
+        query,
+        {'$set': update}
+    )
 
 
 def delete_document(key, query):
