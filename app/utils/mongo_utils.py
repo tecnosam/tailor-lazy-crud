@@ -113,7 +113,7 @@ def get_documents(
     else:
         pipeline = [
             {"$match": query},
-            {"$project": {'$id': 0}}
+            {"$project": {'$_id': 0}}
         ]
 
         if lookups:
