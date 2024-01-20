@@ -68,14 +68,12 @@ def add_to_db(key, value, query=None):
 
         collection, field = key.split('.')
 
-        __push_to_array(
+        return __push_to_array(
             collection,
             field,
             value,
             query
         )
-
-        return True
 
     return __push_document(key, value)
 
@@ -96,7 +94,11 @@ def get_objects_in_array(collection, field, query):
     return results
 
 
-def get_documents(collection, query):
+def get_documents(
+    collection: str,
+    query: dict,
+    lookups: dict = None
+):
 
     if __is_field(collection):
 
@@ -109,7 +111,24 @@ def get_documents(collection, query):
         )
 
     else:
-        results = db[collection].find(query)
+        pipeline = [
+            {"$match": query},
+            {"$project": {'$id': 0}}
+        ]
+
+        if lookups:
+
+            for field, foreign in lookups.items():
+
+                foreign_collection, foreign_field = foreign.split('.')
+                pipeline.append({
+                    'from': foreign_collection,
+                    'localField': field,
+                    'foreignField': foreign_field,
+                    'as': foreign_collection
+                })
+
+        results = db[collection].aggregate(pipeline)
 
     return list(results)
 
@@ -131,7 +150,7 @@ def get_document(collection, query):
         except StopIteration:
             return None
 
-    result = db[collection].find_one(query)
+    result = db[collection].find_one(query, {'_id': 0})
     return result
 
 
