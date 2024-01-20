@@ -23,6 +23,9 @@ def __push_document(
     document,
 ):
 
+    if 'id' in document:
+        document['id'] = str(document['id'])
+
     result = db[collection].insert_one(document)
     return result
 
@@ -33,6 +36,9 @@ def __push_to_array(
     obj,
     query
 ):
+
+    if 'id' in obj:
+        obj['id'] = str(obj['id'])
 
     update = {'$push': {field: obj}}
 
@@ -113,7 +119,7 @@ def get_documents(
     else:
         pipeline = [
             {"$match": query},
-            {"$project": {'$_id': 0}}
+            {"$project": {'_id': 0}}
         ]
 
         if lookups:
@@ -156,7 +162,7 @@ def get_document(collection, query):
 
 def get_document_by_id(collection, documentUUId):
 
-    documentUUId = UUID(documentUUId)
+    documentUUId = str(documentUUId)
     return get_document(collection, {'id': documentUUId})
 
 
