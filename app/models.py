@@ -23,10 +23,10 @@ class LoginForm(BaseModel):
 
 class OurBase(BaseModel):
 
-    id: UUID = Field(default=uuid4)
+    id: UUID = Field(default_factory=lambda: uuid4().hex)
 
 
-class User(BaseModel):
+class User(OurBase):
 
     name: str
     email: str
