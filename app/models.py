@@ -36,6 +36,7 @@ class User(BaseModel):
 
 class Product(OurBase):
 
+    tailor_id: int
     name: str
     description: str
     price: float
@@ -49,8 +50,6 @@ class Tailor(User):
     location: str
 
     cost: float
-
-    product: List[Product]
 
 
 class Order(OurBase):
