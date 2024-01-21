@@ -117,10 +117,15 @@ def get_documents(
         )
 
     else:
+
         pipeline = [
-            {"$match": query},
             {"$project": {'_id': 0}}
         ]
+
+        if query:
+            pipeline.append(
+                {'$match': query}
+            )
 
         if lookups:
 
@@ -128,11 +133,18 @@ def get_documents(
 
                 foreign_collection, foreign_field = foreign.split('.')
                 pipeline.append({
-                    'from': foreign_collection,
-                    'localField': field,
-                    'foreignField': foreign_field,
-                    'as': foreign_collection
+                    "$lookup": {
+                        'from': foreign_collection,
+                        'localField': field,
+                        'foreignField': foreign_field,
+                        'as': foreign_collection,
+                        "pipeline": [
+                            {"$project": {"_id": 0}}
+                        ]
+                    }
                 })
+
+            print(pipeline)
 
         results = db[collection].aggregate(pipeline)
 
@@ -167,6 +179,8 @@ def get_document_by_id(collection, documentUUId):
 
 
 def update_document(key, query, update):
+
+    update.pop('id', '')
 
     if __is_field(key):
 
