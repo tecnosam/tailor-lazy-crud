@@ -61,15 +61,15 @@ class Order(OurBase):
         date: datetime 
         status: str
 
-    user_id: UUID
-    tailor_id: UUID
+    user_id: str
+    tailor_id: str
 
-    product_id: Optional[UUID]
+    product_id: Optional[str] = Field(default="")
 
     price_agreed: float
 
     due_date: datetime 
 
-    status: str
+    status: str = Field(default="pending")
 
-    tracking: List[Tracking]
+    tracking: List[Tracking] = Field(default=[])
