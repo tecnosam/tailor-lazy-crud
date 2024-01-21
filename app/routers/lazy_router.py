@@ -38,9 +38,9 @@ lazy_map = {
         'model': Order,
         'key': 'orders',
         'lookups': {
-            'productId': 'products.id',
-            'tailorId': 'tailors.id',
-            'userId': 'users.id'
+            'product_id': 'products.id',
+            'tailor_id': 'tailors.id',
+            'user_id': 'users.id'
         }
     }
 }
