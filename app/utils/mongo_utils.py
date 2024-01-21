@@ -1,5 +1,7 @@
 from pymongo import MongoClient
 
+from pymongo.errors import DuplicateKeyError
+
 from uuid import UUID
 
 
@@ -23,11 +25,15 @@ def __push_document(
     document,
 ):
 
-    if 'id' in document:
-        document['id'] = str(document['id'])
+    try:
+        if 'id' in document:
+            document['id'] = str(document['id'])
 
-    result = db[collection].insert_one(document)
-    return result
+        result = db[collection].insert_one(document)
+        return result
+    except DuplicateKeyError:
+
+        return -1
 
 
 def __push_to_array(
@@ -180,31 +186,35 @@ def get_document_by_id(collection, documentUUId):
 
 def update_document(key, query, update):
 
-    update.pop('id', '')
+    try:
+        update.pop('id', '')
 
-    if __is_field(key):
+        if __is_field(key):
 
-        collection, field = key.split('.')
+            collection, field = key.split('.')
 
-        query = {
-            f'{field}.{k}': v
-            for k, v in query.items()
-        }
+            query = {
+                f'{field}.{k}': v
+                for k, v in query.items()
+            }
 
-        update = {
-            f'{field}.$.{k}': v
-            for k, v in update.items()
-        }
+            update = {
+                f'{field}.$.{k}': v
+                for k, v in update.items()
+            }
 
-        return db[collection].update_many(
+            return db[collection].update_many(
+                query,
+                {"$set": update}
+            )
+
+        return db[key].update_one(
             query,
-            {"$set": update}
+            {'$set': update}
         )
+    except DuplicateKeyError:
 
-    return db[key].update_one(
-        query,
-        {'$set': update}
-    )
+        return -1
 
 
 def delete_document(key, query):

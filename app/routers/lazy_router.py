@@ -24,15 +24,17 @@ from app.utils.mongo_utils import (
     get_document_by_id,
     add_to_db,
     update_document,
-    delete_document
+    delete_document,
+
+    db
 )
 
 
 router = APIRouter(prefix='/api/lazy', tags=['Lazy Router'])
 
 lazy_map = {
-    'users': {'model': User, 'key': 'users'},
-    'tailors': {'model': Tailor, 'key': 'tailors'},
+    'users': {'model': User, 'key': 'users', 'unique': ['email']},
+    'tailors': {'model': Tailor, 'key': 'tailors', 'unique': ['email']},
     'products': {'model': Product, 'key': 'products'},
     'orders': {
         'model': Order,
@@ -44,6 +46,15 @@ lazy_map = {
         }
     }
 }
+
+
+for value in lazy_map.values():
+
+    if 'unique' in value:
+
+        key = value['key']
+        for field in value['unique']:
+            db[key].create_index(field, unique=True)
 
 
 @router.get("/{resource}")
@@ -86,6 +97,13 @@ async def add_resource_route(
 
         response = add_to_db(key, {**value})
 
+        if response == -1 or response is None:
+
+            raise HTTPException(
+                status_code=400,
+                detail=f"{resource}: Value already exists"
+            )
+
         return value
     except ValidationError as exc:
 
@@ -110,11 +128,18 @@ async def update_resource_route(
 
         value = Model(**body).model_dump()
 
-        update_document(
+        response = update_document(
             key,
             {'id': resourceId},
             value
         )
+
+        if response == -1 or response is None:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Entity already exists"
+            )
 
         return True
     except ValidationError as exc:
