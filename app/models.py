@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import (
     List,
+    Dict,
     Optional
 )
 
@@ -24,6 +25,8 @@ class LoginForm(BaseModel):
 class OurBase(BaseModel):
 
     id: UUID = Field(default_factory=lambda: uuid4().hex)
+
+    images: List[Dict[str, str]] = Field(default_factory=lambda: [])
 
 
 class User(OurBase):

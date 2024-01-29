@@ -8,8 +8,11 @@ from pydantic import ValidationError
 from fastapi import (
     APIRouter,
     Path,
+    Query,
     Body,
-    HTTPException
+    HTTPException,
+
+    UploadFile
 )
 
 from app.models import (
@@ -27,6 +30,10 @@ from app.utils.mongo_utils import (
     delete_document,
 
     db
+)
+
+from app.utils.file_utils import (
+    upload_from_stream
 )
 
 
@@ -113,6 +120,35 @@ async def add_resource_route(
         )
 
 
+@router.post("/{resource}/{resourceId}/add-image")
+def upload_image_route(
+    *,
+    resource: str = Path(),
+    resourceId: str = Path(),
+    file: UploadFile
+):
+
+    lazy_args = lazy_map[resource]
+
+    key = lazy_args['key']
+
+    url = upload_from_stream(
+        stream=file.file,
+        public_id=f"{resourceId}-{file.filename}",
+        folder=f"stylors/lazy/{resource}"
+    )
+
+    response = add_to_db(
+        f"{key}.images",
+        {'url': url},
+        {'id': resourceId}
+    )
+
+    print("Response from images", response)
+
+    return True
+
+
 @router.put("/{resource}/{resourceId}")
 async def update_resource_route(
     body: Any = Body(None),
@@ -148,6 +184,23 @@ async def update_resource_route(
             status_code=412,
             detail=exc.errors()
         )
+
+
+@router.delete("/{resource}/{resourceId}/remove-image")
+def delete_image_route(
+    resource: str = Path(),
+    resourceId: str = Path(),
+
+    image_url: str = Query()
+):
+
+    lazy_args = lazy_map[resource]
+
+    key = lazy_args['key']
+
+    delete_document(f"{key}.images", {'url': image_url})
+
+    return True
 
 
 @router.delete("/{resource}/{resourceId}")
