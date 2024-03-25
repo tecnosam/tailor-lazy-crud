@@ -4,8 +4,11 @@ from pymongo.errors import DuplicateKeyError
 
 from uuid import UUID
 
+from app.utils.settings import MONGO_URI
 
-client = MongoClient()
+
+print(MONGO_URI)
+client = MongoClient(MONGO_URI)
 
 db = client['stylors']
 
