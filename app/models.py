@@ -39,7 +39,7 @@ class User(OurBase):
 
 class Product(OurBase):
 
-    tailor_id: int
+    tailor_id: str
     name: str
     description: str
     price: float
